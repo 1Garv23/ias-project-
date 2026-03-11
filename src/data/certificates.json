@@ -1,0 +1,35 @@
+[
+  {
+    "hash": "0x6b6589a8d414607f7e873d7196ecdf9e969b98abefce20728258021190cce135",
+    "studentName": "as",
+    "course": "as",
+    "institution": "nitk",
+    "duration": "1 Month",
+    "grade": "a",
+    "credentialType": "Certificate",
+    "status": "valid",
+    "issuedAt": "2026-03-07T08:20:59.426Z"
+  },
+  {
+    "hash": "0x94e848ce2b0e578128b64651ada8d0f28cd81bd1b834ed840b7c7c787dc52b0e",
+    "studentName": "gavr2",
+    "course": "it",
+    "institution": "iitd",
+    "duration": "1 Year",
+    "grade": "aa",
+    "credentialType": "Certificate",
+    "status": "revoked",
+    "issuedAt": "2026-03-10T12:38:28.054Z"
+  },
+  {
+    "hash": "0x344688442fbd760969c9a27ab1f2a5b7390e168ace18b8456a04ff18688d62aa",
+    "studentName": "ja",
+    "course": "i",
+    "institution": "nitk",
+    "duration": "3 Months",
+    "grade": "a",
+    "credentialType": "Certificate",
+    "status": "revoked",
+    "issuedAt": "2026-03-11T10:54:51.403Z"
+  }
+]
