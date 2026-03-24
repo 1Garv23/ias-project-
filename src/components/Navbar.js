@@ -4,10 +4,11 @@ const Navbar = ({ account }) => {
   const location = useLocation();
 
   const links = [
-    { label: "Home", path: "/" },
-    { label: "Admin", path: "/admin" },
+    { label: "Home",      path: "/" },
+    { label: "Admin",     path: "/admin" },
     { label: "Regulator", path: "/regulator" },
-    { label: "Report", path: "/report" },
+    { label: "Student",   path: "/student" },
+    { label: "Report",    path: "/report" },
   ];
 
   return (

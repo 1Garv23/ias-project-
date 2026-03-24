@@ -20,6 +20,8 @@ const VerifyForm = ({ certificateHash, setCertificateHash, contract, setCertific
         credentialType: certDetails[5],
         issueDate: new Date(Number(certDetails[6]) * 1000).toLocaleDateString(),
         isValid: certDetails[7],
+        studentWallet: certDetails[8],
+        issuerWallet: certDetails[9],
       };
 
       setCertificateData(certificateData);

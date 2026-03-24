@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { BrowserProvider, Contract } from "ethers";
 import toast from "react-hot-toast";
-import axios from "axios";
+import { CONTRACT_ADDRESS, CONTRACT_ABI } from "../contract";
+import useInstitutions from "../hooks/useInstitutions";
 
 const AdminPanel = ({
   formInputs,
@@ -8,22 +10,22 @@ const AdminPanel = ({
   issueCertificateContract,
   revokeCertHash,
   setRevokeCertHash,
+  role,
 }) => {
-  const [institutions, setInstitutions] = useState([]);
+  const { institutions, loadInstitutions } = useInstitutions();
   const [agreed, setAgreed] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [assignWallet, setAssignWallet] = useState("");
+  const [assignRoleVal, setAssignRoleVal] = useState("0");
 
   useEffect(() => {
-    axios
-      .get("http://localhost:5001/institutions")
-      .then((res) => setInstitutions(res.data))
-      .catch(() => toast.error("Failed to load institutions"));
-  }, []);
+    if (window.ethereum) loadInstitutions();
+  }, [loadInstitutions]);
 
   const issueCertificate = async () => {
-    const { studentName, course, institution, duration, grade, credentialType } = formInputs;
+    const { studentName, course, institution, duration, grade, credentialType, studentWallet } = formInputs;
 
-    if (!studentName || !course || !institution || !duration || !grade || !credentialType) {
+    if (!studentName || !course || !institution || !duration || !grade || !credentialType || !studentWallet) {
       toast.error("All fields are required");
       return;
     }
@@ -45,7 +47,8 @@ const AdminPanel = ({
         institution,
         duration,
         grade,
-        credentialType
+        credentialType,
+        studentWallet
       );
       const receipt = await tx.wait();
 
@@ -97,7 +100,8 @@ const AdminPanel = ({
           institution: "",
           duration: "",
           grade: "",
-          credentialType: ""
+          credentialType: "",
+          studentWallet: ""
         });
         setAgreed(false);
       } else {
@@ -131,6 +135,26 @@ const AdminPanel = ({
     }
   };
 
+  const handleAssignRole = async () => {
+    if (!assignWallet) {
+      toast.error("Enter a wallet address");
+      return;
+    }
+    try {
+      const provider = new BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+      const tx = await contract.assignRole(assignWallet, Number(assignRoleVal));
+      await tx.wait();
+      toast.success("Role assigned successfully!");
+      setAssignWallet("");
+      setAssignRoleVal("0");
+    } catch (err) {
+      toast.error("Failed to assign role");
+      console.error(err);
+    }
+  };
+
   return (
     <div className="bg-gray-100 pb-12">
       {/* ✅ Hero */}
@@ -151,6 +175,14 @@ const AdminPanel = ({
           placeholder="Student Name"
           value={formInputs.studentName}
           onChange={(e) => setFormInputs({ ...formInputs, studentName: e.target.value })}
+          className="w-full p-2 mb-3 border rounded focus:outline-none focus:ring-2 focus:ring-green-400"
+        />
+
+        <input
+          type="text"
+          placeholder="Student Wallet Address (0x...)"
+          value={formInputs.studentWallet}
+          onChange={(e) => setFormInputs({ ...formInputs, studentWallet: e.target.value })}
           className="w-full p-2 mb-3 border rounded focus:outline-none focus:ring-2 focus:ring-green-400"
         />
 
@@ -204,7 +236,7 @@ const AdminPanel = ({
         >
           <option value="">Select Institution</option>
           {institutions.map((inst) => (
-            <option key={inst.id} value={inst.name}>
+            <option key={inst.wallet} value={inst.name}>
               {inst.name}
             </option>
           ))}
@@ -254,6 +286,36 @@ const AdminPanel = ({
         >
           Revoke Certificate
         </button>
+
+        {/* ✅ Assign Role Section — GOVT only */}
+        {role === "GOVT" && (
+          <>
+            <h2 className="text-xl font-bold text-purple-700 mt-8 mb-2">Assign Role</h2>
+            <input
+              type="text"
+              className="w-full p-2 mb-3 border rounded focus:outline-none focus:ring-2 focus:ring-purple-400"
+              placeholder="Wallet Address (0x...)"
+              value={assignWallet}
+              onChange={(e) => setAssignWallet(e.target.value)}
+            />
+            <select
+              className="w-full p-2 mb-3 border rounded focus:outline-none focus:ring-2 focus:ring-purple-400"
+              value={assignRoleVal}
+              onChange={(e) => setAssignRoleVal(e.target.value)}
+            >
+              <option value="0">PUBLIC</option>
+              <option value="1">INSTITUTION</option>
+              <option value="2">REGULATOR</option>
+              <option value="3">GOVT</option>
+            </select>
+            <button
+              onClick={handleAssignRole}
+              className="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700"
+            >
+              Assign Role
+            </button>
+          </>
+        )}
       </div>
 
       {/* ✅ Guidelines Modal */}

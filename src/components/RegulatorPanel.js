@@ -1,22 +1,24 @@
 import { useEffect, useState } from "react";
+import { BrowserProvider, Contract } from "ethers";
 import toast from "react-hot-toast";
-import axios from "axios";
+import useInstitutions from "../hooks/useInstitutions";
+import { CONTRACT_ADDRESS, CONTRACT_ABI } from "../contract";
 
 const RegulatorPanel = () => {
-  const [institutions, setInstitutions] = useState([]);
-  const [newInstitution, setNewInstitution] = useState({ name: "", code: "" });
+  const { institutions, loadInstitutions } = useInstitutions();
+  const [newInstitution, setNewInstitution] = useState({ wallet: "", name: "", code: "" });
   const [agreed, setAgreed] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    axios.get("http://localhost:5001/institutions")
-      .then(res => setInstitutions(res.data))
-      .catch(() => toast.error("Failed to load institutions"));
-  }, []);
+    if (window.ethereum) loadInstitutions();
+  }, [loadInstitutions]);
 
   const addInstitution = async () => {
-    if (!newInstitution.name || !newInstitution.code) {
-      toast.error("Both name and code are required");
+    const { wallet, name, code } = newInstitution;
+
+    if (!wallet || !name || !code) {
+      toast.error("Wallet address, name, and code are all required");
       return;
     }
 
@@ -25,23 +27,19 @@ const RegulatorPanel = () => {
       return;
     }
 
-    const updatedList = [
-      ...institutions,
-      {
-        id: Date.now(),
-        name: newInstitution.name.trim(),
-        code: newInstitution.code.trim().toUpperCase(),
-      },
-    ];
-
     try {
-      await axios.post("http://localhost:5001/institutions", updatedList);
-      setInstitutions(updatedList);
-      setNewInstitution({ name: "", code: "" });
+      const provider = new BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+      const tx = await contract.addInstitution(wallet, name.trim(), code.trim().toUpperCase());
+      await tx.wait();
+      toast.success("Institution registered on-chain!");
+      setNewInstitution({ wallet: "", name: "", code: "" });
       setAgreed(false);
-      toast.success("Institution saved!");
+      await loadInstitutions();
     } catch (error) {
-      toast.error("Failed to save institution");
+      toast.error("Failed to register institution");
+      console.error(error);
     }
   };
 
@@ -56,6 +54,13 @@ const RegulatorPanel = () => {
       <div className="container mx-auto mt-10 p-6 bg-white rounded-lg shadow max-w-xl">
         <h2 className="text-2xl font-bold mb-4 text-center text-green-700">Register New Institution</h2>
 
+        <input
+          type="text"
+          placeholder="Institution Wallet Address (0x...)"
+          value={newInstitution.wallet}
+          onChange={(e) => setNewInstitution({ ...newInstitution, wallet: e.target.value })}
+          className="w-full p-2 mb-3 border rounded focus:outline-none focus:ring-2 focus:ring-green-400"
+        />
         <input
           type="text"
           placeholder="Institution Name"
@@ -81,7 +86,7 @@ const RegulatorPanel = () => {
             className="mt-1 mr-2"
           />
           <label htmlFor="confirm">
-            I confirm that this institution registration complies with the official 
+            I confirm that this institution registration complies with the official{" "}
             <button
               onClick={() => setShowModal(true)}
               className="ml-1 text-blue-600 underline hover:text-blue-800"
@@ -103,9 +108,10 @@ const RegulatorPanel = () => {
         <h3 className="text-xl font-semibold mt-8 mb-2">Institution List</h3>
         <ul className="space-y-2">
           {institutions.map((inst) => (
-            <li key={inst.id} className="flex justify-between items-center p-3 bg-gray-50 border rounded">
+            <li key={inst.wallet} className="flex justify-between items-center p-3 bg-gray-50 border rounded">
               <span className="font-medium">{inst.name}</span>
               <span className="text-sm text-gray-500">{inst.code}</span>
+              <span className="text-xs text-gray-400 font-mono truncate max-w-[120px]" title={inst.wallet}>{inst.wallet}</span>
             </li>
           ))}
         </ul>
