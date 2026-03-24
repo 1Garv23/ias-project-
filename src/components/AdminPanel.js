@@ -82,18 +82,6 @@ const AdminPanel = ({
           { duration: 10000 }
         );
 
-        await axios.post("http://localhost:5001/certificates", {
-          hash: certHash,
-          studentName,
-          course,
-          institution,
-          duration,
-          grade,
-          credentialType,
-          status: "valid",
-          issuedAt: new Date().toISOString(),
-        });
-
         setFormInputs({
           studentName: "",
           course: "",
@@ -122,10 +110,6 @@ const AdminPanel = ({
     try {
       const tx = await issueCertificateContract.revokeCertificate(revokeCertHash);
       await tx.wait();
-
-      await axios.put("http://localhost:5001/certificates/revoke", {
-        hash: revokeCertHash,
-      });
 
       toast.success("Certificate Revoked Successfully!");
       setRevokeCertHash("");

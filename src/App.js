@@ -38,19 +38,34 @@ function App() {
 
   useEffect(() => {
     const loadBlockchainData = async () => {
-      if (window.ethereum) {
-        const provider = new BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
-        const contractInstance = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-        setContract(contractInstance);
-
-        const accounts = await provider.send("eth_requestAccounts", []);
-        setAccount(accounts[0]);
-      } else {
+      if (!window.ethereum) {
         toast.error("Please install MetaMask!");
+        return;
+      }
+      const provider = new BrowserProvider(window.ethereum);
+      const accounts = await provider.send("eth_requestAccounts", []);
+      const signer = await provider.getSigner();
+      const contractInstance = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+      setAccount(accounts[0]);
+      setContract(contractInstance);
+    };
+
+    loadBlockchainData();
+
+    // Re-sync whenever the user switches accounts in MetaMask
+    const handleAccountsChanged = (accounts) => {
+      if (accounts.length === 0) {
+        setAccount(null);
+        setContract(null);
+      } else {
+        loadBlockchainData();
       }
     };
-    loadBlockchainData();
+
+    window.ethereum?.on("accountsChanged", handleAccountsChanged);
+    return () => {
+      window.ethereum?.removeListener("accountsChanged", handleAccountsChanged);
+    };
   }, []);
 
   return (

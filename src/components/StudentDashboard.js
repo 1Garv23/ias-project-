@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BrowserProvider, Contract } from "ethers";
+import { BrowserProvider, Contract, isAddress, getAddress } from "ethers";
 import toast from "react-hot-toast";
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from "../contract";
 
@@ -23,31 +23,45 @@ const StudentDashboard = ({ account }) => {
 
     const loadCerts = async () => {
       try {
+        setCerts([]);   // clear immediately — never show stale data from prev wallet
         setLoading(true);
         const provider = new BrowserProvider(window.ethereum);
         const signer   = await provider.getSigner();
-        const contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+        const signerAddress = (await signer.getAddress()).toLowerCase();
 
+        // Race-condition guard: MetaMask may not have switched yet
+        if (signerAddress !== account.toLowerCase()) return;
+
+        const contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
         const hashes = await contract.getMyCertificates();
+
         const list = await Promise.all(
           hashes.map(async (hash) => {
-            const d = await contract.verifyCertificate(hash);
+            // Use the PUBLIC mapping getter — no isAuthorised check.
+            // verifyCertificate() lets INSTITUTION/GOVT wallets see ANY cert,
+            // which caused the "visible in all dashboards" bug.
+            const d = await contract.certificates(hash);
             return {
               hash,
-              studentName:    d[0],
-              course:         d[1],
-              institution:    d[2],
-              duration:       d[3],
-              grade:          d[4],
-              credentialType: d[5],
-              issueDate:      new Date(Number(d[6]) * 1000).toLocaleDateString(),
-              isValid:        d[7],
-              studentWallet:  d[8],
-              issuerWallet:   d[9],
+              studentName:    d.studentName,
+              course:         d.course,
+              institution:    d.institution,
+              duration:       d.duration,
+              grade:          d.grade,
+              credentialType: d.credentialType,
+              issueDate:      new Date(Number(d.issueDate) * 1000).toLocaleDateString(),
+              isValid:        d.isValid,
+              studentWallet:  d.studentWallet,
+              issuerWallet:   d.issuerWallet,
             };
           })
         );
-        setCerts(list);
+
+        // Secondary ownership check — only show certs issued to this exact wallet
+        const filtered = list.filter(
+          (c) => c.studentWallet.toLowerCase() === signerAddress
+        );
+        setCerts(filtered);
       } catch (err) {
         console.error("StudentDashboard: failed to load certs", err);
         toast.error("Failed to load your certificates.");
@@ -88,12 +102,31 @@ const StudentDashboard = ({ account }) => {
   /* ── Grant access ───────────────────────────────────────────────────── */
   const handleGrant = async () => {
     if (!grantee) { toast.error("Enter a grantee wallet address"); return; }
+
+    // Validate address BEFORE touching the contract — prevents ENS lookup on Hardhat
+    if (!isAddress(grantee)) {
+      toast.error("Invalid wallet address. Enter a full 0x… address.");
+      return;
+    }
+
     try {
       const provider = new BrowserProvider(window.ethereum);
       const signer   = await provider.getSigner();
+      const signerAddress = await signer.getAddress();
+
+      // Guard: the connected wallet must be the certificate's student
+      if (signerAddress.toLowerCase() !== activeCert.studentWallet.toLowerCase()) {
+        toast.error(
+          `Wrong wallet connected. Switch MetaMask to ${activeCert.studentWallet.slice(0,8)}…${activeCert.studentWallet.slice(-6)} (the student's wallet) and try again.`,
+          { duration: 8000 }
+        );
+        return;
+      }
+
       const contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
       const expiry = Math.floor(Date.now() / 1000) + Number(duration);
-      const tx = await contract.grantAccess(activeCert.hash, grantee, expiry);
+      // Use checksummed address to avoid ethers v6 ENS resolution on local networks
+      const tx = await contract.grantAccess(activeCert.hash, getAddress(grantee), expiry);
       await tx.wait();
       toast.success("Access granted!");
       setGrantee("");
