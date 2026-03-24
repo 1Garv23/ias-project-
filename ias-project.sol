@@ -4,9 +4,7 @@ pragma solidity ^0.8.0;
 contract CertificateRegistry {
 
     address public admin;
-
-    // ── NEW: authorized issuers (INSTITUTION wallets) ──────────────────────
-    mapping(address => bool) public authorizedIssuers;
+    address public institutionWallet = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
 
     struct Certificate {
         string  studentName;
@@ -22,99 +20,78 @@ contract CertificateRegistry {
     mapping(bytes32 => Certificate) public certificates;
     mapping(address => bytes32[])   public userCertificates;
 
-    // ── Events ─────────────────────────────────────────────────────────────
-    event CertificateIssued(bytes32 indexed certHash, string studentName);
-    event CertificateRevoked(bytes32 indexed certHash);
+    event CertificateIssued(bytes32 certHash, string studentName, string course, string institution, string duration, string grade, string credentialType, uint256 issueDate);
+    event CertificateRevoked(bytes32 certHash);
 
-    // ── Modifiers ──────────────────────────────────────────────────────────
     modifier onlyAdmin() {
-        require(msg.sender == admin, "Only admin can perform this action");
-        _;
-    }
-
-    // NEW: admin OR any authorized issuer can call this
-    modifier onlyIssuer() {
         require(
-            msg.sender == admin || authorizedIssuers[msg.sender],
-            "Not authorized to issue certificates"
+            msg.sender == admin || msg.sender == institutionWallet,
+            "Only admin can perform this action"
         );
         _;
     }
 
-    // ── Constructor ────────────────────────────────────────────────────────
     constructor() {
         admin = msg.sender;
     }
 
-    // ── NEW: manage authorized issuers (admin only) ────────────────────────
-    function addIssuer(address issuer) public onlyAdmin {
-        authorizedIssuers[issuer] = true;
-    }
-
-    function removeIssuer(address issuer) public onlyAdmin {
-        authorizedIssuers[issuer] = false;
-    }
-
-    // ── Issue certificate (admin OR authorized issuer) ─────────────────────
     function issueCertificate(
-        string memory studentName,
-        string memory course,
-        string memory institution,
-        string memory duration,
-        string memory grade,
-        string memory credentialType
-    ) public onlyIssuer returns (bytes32) {
+        string memory _studentName,
+        string memory _course,
+        string memory _institution,
+        string memory _duration,
+        string memory _grade,
+        string memory _credentialType
+    ) public onlyAdmin returns (bytes32) {
 
         bytes32 certHash = keccak256(
             abi.encodePacked(
-                studentName,
-                course,
-                institution,
-                duration,
-                grade,
-                credentialType,
+                _studentName,
+                _course,
+                _institution,
+                _duration,
+                _grade,
+                _credentialType,
                 block.timestamp,
                 msg.sender
             )
         );
 
         certificates[certHash] = Certificate({
-            studentName:    studentName,
-            course:         course,
-            institution:    institution,
-            duration:       duration,
-            grade:          grade,
-            credentialType: credentialType,
+            studentName:    _studentName,
+            course:         _course,
+            institution:    _institution,
+            duration:       _duration,
+            grade:          _grade,
+            credentialType: _credentialType,
             issueDate:      block.timestamp,
             isValid:        true
         });
 
         userCertificates[msg.sender].push(certHash);
 
-        emit CertificateIssued(certHash, studentName);
+        emit CertificateIssued(certHash, _studentName, _course, _institution, _duration, _grade, _credentialType, block.timestamp);
         return certHash;
     }
 
-    // ── Revoke certificate (admin only) ───────────────────────────────────
     function revokeCertificate(bytes32 certHash) public onlyAdmin {
         require(certificates[certHash].isValid, "Certificate already invalid");
         certificates[certHash].isValid = false;
         emit CertificateRevoked(certHash);
     }
 
-    // ── Verify certificate (public) ───────────────────────────────────────
     function verifyCertificate(bytes32 certHash)
         public
         view
         returns (
-            string memory studentName,
-            string memory course,
-            string memory institution,
-            string memory duration,
-            string memory grade,
-            string memory credentialType,
-            uint256 issueDate,
-            bool isValid
+            string memory,
+            string memory,
+            string memory,
+            string memory,
+            string memory,
+            string memory,
+            uint256,
+            bool
         )
     {
         Certificate memory cert = certificates[certHash];
@@ -130,7 +107,6 @@ contract CertificateRegistry {
         );
     }
 
-    // ── Get all cert hashes issued by a wallet ────────────────────────────
     function getMyCertificates() public view returns (bytes32[] memory) {
         return userCertificates[msg.sender];
     }

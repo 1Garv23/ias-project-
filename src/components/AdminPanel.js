@@ -49,18 +49,11 @@ const AdminPanel = ({
       );
       const receipt = await tx.wait();
 
-      // ── Parse CertificateIssued event properly ──────────────────────────
+      // certHash is not indexed so it lives in log data — parse via interface
       const iface = issueCertificateContract.interface;
       const parsedLog = receipt.logs
-        .map((log) => {
-          try {
-            return iface.parseLog(log);
-          } catch {
-            return null;
-          }
-        })
+        .map((log) => { try { return iface.parseLog(log); } catch { return null; } })
         .find((e) => e?.name === "CertificateIssued");
-
       const certHash = parsedLog?.args?.certHash;
 
       if (certHash) {
@@ -104,21 +97,15 @@ const AdminPanel = ({
           institution: "",
           duration: "",
           grade: "",
-          credentialType: "",
+          credentialType: ""
         });
         setAgreed(false);
       } else {
-        toast.error("Certificate issued on-chain, but hash could not be read.");
+        toast.error("Certificate issued, but hash not found.");
       }
     } catch (error) {
+      toast.error("Issuance failed");
       console.error(error);
-      if (error?.reason) {
-        toast.error(`Issuance failed: ${error.reason}`);
-      } else if (error?.message?.includes("Not authorized")) {
-        toast.error("This wallet is not authorized to issue certificates.");
-      } else {
-        toast.error("Issuance failed — check console for details.");
-      }
     }
   };
 
@@ -139,20 +126,14 @@ const AdminPanel = ({
       toast.success("Certificate Revoked Successfully!");
       setRevokeCertHash("");
     } catch (error) {
+      toast.error("Revocation failed");
       console.error(error);
-      if (error?.reason) {
-        toast.error(`Revocation failed: ${error.reason}`);
-      } else if (error?.message?.includes("Only admin")) {
-        toast.error("Only the admin (GOVT) can revoke certificates.");
-      } else {
-        toast.error("Revocation failed — check console for details.");
-      }
     }
   };
 
   return (
     <div className="bg-gray-100 pb-12">
-      {/* Hero */}
+      {/* ✅ Hero */}
       <div className="w-full bg-green-700 text-white py-16 text-center">
         <h1 className="text-4xl font-bold mb-2">Admin Panel</h1>
         <p className="text-lg text-green-100">
@@ -192,8 +173,8 @@ const AdminPanel = ({
           <option value="6 Months">6 Months</option>
           <option value="1 Year">1 Year</option>
           <option value="2 Years">2 Years</option>
-          <option value="3 Years">3 Years</option>
-          <option value="4 Years">4 Years</option>
+          <option value="2 Years">3 Years</option>
+          <option value="2 Years">4 Years</option>
         </select>
 
         <input
@@ -229,7 +210,7 @@ const AdminPanel = ({
           ))}
         </select>
 
-        {/* Confirmation Checkbox */}
+        {/* ✅ Confirmation Checkbox */}
         <div className="flex items-start text-sm text-gray-700 mb-4">
           <input
             id="guidelines"
@@ -258,7 +239,7 @@ const AdminPanel = ({
           Issue Certificate
         </button>
 
-        {/* Revoke Section */}
+        {/* ✅ Revoke Section */}
         <h2 className="text-xl font-bold text-red-700 mt-8 mb-2">Revoke Certificate</h2>
         <input
           type="text"
@@ -275,7 +256,7 @@ const AdminPanel = ({
         </button>
       </div>
 
-      {/* Guidelines Modal */}
+      {/* ✅ Guidelines Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white max-w-md w-full p-6 rounded-lg shadow-lg relative">

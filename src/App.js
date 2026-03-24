@@ -14,9 +14,310 @@ import Report from "./components/Report";
 import useRole from "./hooks/useRole";
 import "./App.css";
 
-// PUT THE FOLLOWING INFO AFTER DEPLOYING THE CONTRACT IN REMIX
-const CONTRACT_ADDRESS = "0x8464135c8F25Da09e49BC8782676a84730C318bC"; 
-const CONTRACT_ABI = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"bytes32","name":"certHash","type":"bytes32"},{"indexed":false,"internalType":"string","name":"studentName","type":"string"},{"indexed":false,"internalType":"string","name":"course","type":"string"},{"indexed":false,"internalType":"string","name":"institution","type":"string"},{"indexed":false,"internalType":"string","name":"duration","type":"string"},{"indexed":false,"internalType":"string","name":"grade","type":"string"},{"indexed":false,"internalType":"string","name":"credentialType","type":"string"},{"indexed":false,"internalType":"uint256","name":"issueDate","type":"uint256"}],"name":"CertificateIssued","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"bytes32","name":"certHash","type":"bytes32"}],"name":"CertificateRevoked","type":"event"},{"inputs":[],"name":"admin","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"name":"certificates","outputs":[{"internalType":"string","name":"studentName","type":"string"},{"internalType":"string","name":"course","type":"string"},{"internalType":"string","name":"institution","type":"string"},{"internalType":"string","name":"duration","type":"string"},{"internalType":"string","name":"grade","type":"string"},{"internalType":"string","name":"credentialType","type":"string"},{"internalType":"uint256","name":"issueDate","type":"uint256"},{"internalType":"bool","name":"isValid","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getMyCertificates","outputs":[{"internalType":"bytes32[]","name":"","type":"bytes32[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"string","name":"_studentName","type":"string"},{"internalType":"string","name":"_course","type":"string"},{"internalType":"string","name":"_institution","type":"string"},{"internalType":"string","name":"_duration","type":"string"},{"internalType":"string","name":"_grade","type":"string"},{"internalType":"string","name":"_credentialType","type":"string"}],"name":"issueCertificate","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes32","name":"certHash","type":"bytes32"}],"name":"revokeCertificate","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"userCertificates","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes32","name":"certHash","type":"bytes32"}],"name":"verifyCertificate","outputs":[{"internalType":"string","name":"","type":"string"},{"internalType":"string","name":"","type":"string"},{"internalType":"string","name":"","type":"string"},{"internalType":"string","name":"","type":"string"},{"internalType":"string","name":"","type":"string"},{"internalType":"string","name":"","type":"string"},{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"}];
+const CONTRACT_ADDRESS = "0x0165878A594ca255338adfa4d48449f69242Eb8F";
+const CONTRACT_ABI = [
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "bytes32",
+				"name": "certHash",
+				"type": "bytes32"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "studentName",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "course",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "institution",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "duration",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "grade",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "credentialType",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "issueDate",
+				"type": "uint256"
+			}
+		],
+		"name": "CertificateIssued",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "bytes32",
+				"name": "certHash",
+				"type": "bytes32"
+			}
+		],
+		"name": "CertificateRevoked",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_studentName",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_course",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_institution",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_duration",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_grade",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_credentialType",
+				"type": "string"
+			}
+		],
+		"name": "issueCertificate",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "certHash",
+				"type": "bytes32"
+			}
+		],
+		"name": "revokeCertificate",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "admin",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"name": "certificates",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "studentName",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "course",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "institution",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "duration",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "grade",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "credentialType",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "issueDate",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "isValid",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getMyCertificates",
+		"outputs": [
+			{
+				"internalType": "bytes32[]",
+				"name": "",
+				"type": "bytes32[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "institutionWallet",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "userCertificates",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "certHash",
+				"type": "bytes32"
+			}
+		],
+		"name": "verifyCertificate",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+];
 
 function App() {
   const [account, setAccount] = useState(null);
@@ -125,7 +426,6 @@ function App() {
           </Routes>
         </main>
 
-        
       </div>
     </Router>
   );
