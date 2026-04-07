@@ -4,14 +4,14 @@ import toast from "react-hot-toast";
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from "../contract";
 
 const DURATION_OPTIONS = [
-  { label: "1 Minute  (demo)",   seconds: 60,       group: "Short (Demo)" },
-  { label: "5 Minutes (demo)",   seconds: 300,      group: "Short (Demo)" },
-  { label: "30 Minutes",         seconds: 1800,     group: "Short (Demo)" },
-  { label: "1 Hour",             seconds: 3600,     group: "Standard" },
-  { label: "6 Hours",            seconds: 21600,    group: "Standard" },
-  { label: "1 Day",              seconds: 86400,    group: "Standard" },
-  { label: "7 Days",             seconds: 604800,   group: "Extended" },
-  { label: "30 Days",            seconds: 2592000,  group: "Extended" },
+  { label: "1 Minute  (demo)", seconds: 60, group: "Short (Demo)" },
+  { label: "5 Minutes (demo)", seconds: 300, group: "Short (Demo)" },
+  { label: "30 Minutes", seconds: 1800, group: "Short (Demo)" },
+  { label: "1 Hour", seconds: 3600, group: "Standard" },
+  { label: "6 Hours", seconds: 21600, group: "Standard" },
+  { label: "1 Day", seconds: 86400, group: "Standard" },
+  { label: "7 Days", seconds: 604800, group: "Extended" },
+  { label: "30 Days", seconds: 2592000, group: "Extended" },
 ];
 
 const StudentDashboard = ({ account }) => {
@@ -31,7 +31,7 @@ const StudentDashboard = ({ account }) => {
         setCerts([]);   // clear immediately — never show stale data from prev wallet
         setLoading(true);
         const provider = new BrowserProvider(window.ethereum);
-        const signer   = await provider.getSigner();
+        const signer = await provider.getSigner();
         const signerAddress = (await signer.getAddress()).toLowerCase();
 
         // Race-condition guard: MetaMask may not have switched yet
@@ -48,16 +48,16 @@ const StudentDashboard = ({ account }) => {
             const d = await contract.certificates(hash);
             return {
               hash,
-              studentName:    d.studentName,
-              course:         d.course,
-              institution:    d.institution,
-              duration:       d.duration,
-              grade:          d.grade,
+              studentName: d.studentName,
+              course: d.course,
+              institution: d.institution,
+              duration: d.duration,
+              grade: d.grade,
               credentialType: d.credentialType,
-              issueDate:      new Date(Number(d.issueDate) * 1000).toLocaleDateString(),
-              isValid:        d.isValid,
-              studentWallet:  d.studentWallet,
-              issuerWallet:   d.issuerWallet,
+              issueDate: new Date(Number(d.issueDate) * 1000).toLocaleDateString(),
+              isValid: d.isValid,
+              studentWallet: d.studentWallet,
+              issuerWallet: d.issuerWallet,
             };
           })
         );
@@ -82,14 +82,14 @@ const StudentDashboard = ({ account }) => {
   const loadGrants = async (certHash) => {
     try {
       const provider = new BrowserProvider(window.ethereum);
-      const signer   = await provider.getSigner();
+      const signer = await provider.getSigner();
       const contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
       const raw = await contract.getAccessGrants(certHash);
       setGrants(
         raw.map((g) => ({
           grantee: g.grantee,
-          expiry:  Number(g.expiry),
-          active:  g.active,
+          expiry: Number(g.expiry),
+          active: g.active,
         }))
       );
     } catch (err) {
@@ -116,13 +116,13 @@ const StudentDashboard = ({ account }) => {
 
     try {
       const provider = new BrowserProvider(window.ethereum);
-      const signer   = await provider.getSigner();
+      const signer = await provider.getSigner();
       const signerAddress = await signer.getAddress();
 
       // Guard: the connected wallet must be the certificate's student
       if (signerAddress.toLowerCase() !== activeCert.studentWallet.toLowerCase()) {
         toast.error(
-          `Wrong wallet connected. Switch MetaMask to ${activeCert.studentWallet.slice(0,8)}…${activeCert.studentWallet.slice(-6)} (the student's wallet) and try again.`,
+          `Wrong wallet connected. Switch MetaMask to ${activeCert.studentWallet.slice(0, 8)}…${activeCert.studentWallet.slice(-6)} (the student's wallet) and try again.`,
           { duration: 8000 }
         );
         return;
@@ -146,7 +146,7 @@ const StudentDashboard = ({ account }) => {
   const handleRevoke = async (granteeAddr) => {
     try {
       const provider = new BrowserProvider(window.ethereum);
-      const signer   = await provider.getSigner();
+      const signer = await provider.getSigner();
       const contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
       const tx = await contract.revokeAccess(activeCert.hash, granteeAddr);
       await tx.wait();
@@ -180,19 +180,17 @@ const StudentDashboard = ({ account }) => {
             <div
               key={cert.hash}
               onClick={() => selectCert(cert)}
-              className={`cursor-pointer p-4 rounded-lg shadow border-2 transition ${
-                activeCert?.hash === cert.hash
+              className={`cursor-pointer p-4 rounded-lg shadow border-2 transition ${activeCert?.hash === cert.hash
                   ? "border-indigo-600 bg-indigo-50"
                   : "border-gray-200 bg-white hover:border-indigo-300"
-              }`}
+                }`}
             >
               <p className="font-bold text-gray-800">{cert.course}</p>
               <p className="text-sm text-gray-500">{cert.institution} · {cert.credentialType}</p>
               <p className="text-xs text-gray-400 mt-1">Issued: {cert.issueDate}</p>
               <span
-                className={`text-xs font-semibold px-2 py-0.5 rounded-full mt-2 inline-block ${
-                  cert.isValid ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"
-                }`}
+                className={`text-xs font-semibold px-2 py-0.5 rounded-full mt-2 inline-block ${cert.isValid ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"
+                  }`}
               >
                 {cert.isValid ? "Valid" : "Revoked"}
               </span>
@@ -236,8 +234,8 @@ const StudentDashboard = ({ account }) => {
                   opt.group === "Short (Demo)"
                     ? isSelected ? "bg-amber-500 text-white border-amber-500" : "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100"
                     : opt.group === "Standard"
-                    ? isSelected ? "bg-indigo-600 text-white border-indigo-600" : "bg-indigo-50 text-indigo-700 border-indigo-300 hover:bg-indigo-100"
-                    : isSelected ? "bg-purple-600 text-white border-purple-600" : "bg-purple-50 text-purple-700 border-purple-300 hover:bg-purple-100";
+                      ? isSelected ? "bg-indigo-600 text-white border-indigo-600" : "bg-indigo-50 text-indigo-700 border-indigo-300 hover:bg-indigo-100"
+                      : isSelected ? "bg-purple-600 text-white border-purple-600" : "bg-purple-50 text-purple-700 border-purple-300 hover:bg-purple-100";
 
                 return (
                   <button
@@ -284,17 +282,16 @@ const StudentDashboard = ({ account }) => {
                     const statusBadge = !g.active
                       ? { label: "Revoked", cls: "bg-gray-100 text-gray-500" }
                       : g.expiry <= now
-                      ? { label: "Expired", cls: "bg-red-100 text-red-500" }
-                      : expiringSoon
-                      ? { label: "⚠ Expiring Soon", cls: "bg-amber-100 text-amber-700" }
-                      : { label: "✓ Active", cls: "bg-green-100 text-green-700" };
+                        ? { label: "Expired", cls: "bg-red-100 text-red-500" }
+                        : expiringSoon
+                          ? { label: "⚠ Expiring Soon", cls: "bg-amber-100 text-amber-700" }
+                          : { label: "✓ Active", cls: "bg-green-100 text-green-700" };
 
                     return (
                       <li
                         key={i}
-                        className={`flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 p-3 rounded-lg border text-sm ${
-                          isActive ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"
-                        }`}
+                        className={`flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 p-3 rounded-lg border text-sm ${isActive ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"
+                          }`}
                       >
                         <div>
                           <p
