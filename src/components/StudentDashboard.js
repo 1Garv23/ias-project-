@@ -4,9 +4,14 @@ import toast from "react-hot-toast";
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from "../contract";
 
 const DURATION_OPTIONS = [
-  { label: "24 Hours",  seconds: 86400 },
-  { label: "7 Days",   seconds: 604800 },
-  { label: "30 Days",  seconds: 2592000 },
+  { label: "1 Minute  (demo)",   seconds: 60,       group: "Short (Demo)" },
+  { label: "5 Minutes (demo)",   seconds: 300,      group: "Short (Demo)" },
+  { label: "30 Minutes",         seconds: 1800,     group: "Short (Demo)" },
+  { label: "1 Hour",             seconds: 3600,     group: "Standard" },
+  { label: "6 Hours",            seconds: 21600,    group: "Standard" },
+  { label: "1 Day",              seconds: 86400,    group: "Standard" },
+  { label: "7 Days",             seconds: 604800,   group: "Extended" },
+  { label: "30 Days",            seconds: 2592000,  group: "Extended" },
 ];
 
 const StudentDashboard = ({ account }) => {
@@ -197,75 +202,127 @@ const StudentDashboard = ({ account }) => {
 
         {/* Grant form */}
         {activeCert && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-xl font-bold text-indigo-700 mb-4">
-              Share Access — <span className="font-normal text-gray-600">{activeCert.course}</span>
-            </h2>
+          <div className="bg-white rounded-xl shadow-lg border border-indigo-100 p-6 mb-6">
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-lg">🔐</div>
+              <div>
+                <h2 className="text-xl font-bold text-indigo-700 leading-tight">Temporary Access Sharing</h2>
+                <p className="text-sm text-gray-500">{activeCert.course} · {activeCert.institution}</p>
+              </div>
+            </div>
 
+            {/* Wallet input */}
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+              Employer / Verifier Wallet
+            </label>
             <input
               type="text"
-              placeholder="Employer / Verifier Wallet Address (0x...)"
+              placeholder="0x… full wallet address"
               value={grantee}
               onChange={(e) => setGrantee(e.target.value)}
-              className="w-full p-2 mb-3 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="w-full px-3 py-2 mb-4 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 font-mono"
             />
 
-            <select
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              className="w-full p-2 mb-3 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            >
-              {DURATION_OPTIONS.map((opt) => (
-                <option key={opt.seconds} value={opt.seconds}>{opt.label}</option>
-              ))}
-            </select>
+            {/* Duration selector with coloured badges */}
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+              Access Duration
+            </label>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
+              {DURATION_OPTIONS.map((opt) => {
+                const isSelected = Number(duration) === opt.seconds;
+                const badgeColor =
+                  opt.group === "Short (Demo)"
+                    ? isSelected ? "bg-amber-500 text-white border-amber-500" : "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100"
+                    : opt.group === "Standard"
+                    ? isSelected ? "bg-indigo-600 text-white border-indigo-600" : "bg-indigo-50 text-indigo-700 border-indigo-300 hover:bg-indigo-100"
+                    : isSelected ? "bg-purple-600 text-white border-purple-600" : "bg-purple-50 text-purple-700 border-purple-300 hover:bg-purple-100";
+
+                return (
+                  <button
+                    key={opt.seconds}
+                    onClick={() => setDuration(opt.seconds)}
+                    className={`text-xs font-semibold px-2 py-2 rounded-lg border transition-all text-center ${badgeColor}`}
+                  >
+                    {opt.label.replace(" (demo)", "")}
+                    {opt.group === "Short (Demo)" && (
+                      <span className="block text-[10px] font-normal opacity-75">demo</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Expiry preview */}
+            <p className="text-xs text-gray-400 mb-4 mt-1 italic">
+              ⏱ Access will expire at:{" "}
+              <span className="text-indigo-600 font-medium not-italic">
+                {new Date(Date.now() + Number(duration) * 1000).toLocaleString()}
+              </span>
+            </p>
 
             <button
               onClick={handleGrant}
-              className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700"
+              className="w-full bg-indigo-600 text-white py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition-colors shadow-sm"
             >
-              Grant Access
+              🔓 Grant Temporary Access
             </button>
 
-            {/* Active grants list */}
+            {/* Existing grants table */}
             {grants.length > 0 && (
               <div className="mt-6">
-                <h3 className="font-semibold text-gray-700 mb-2">Existing Access Grants</h3>
+                <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  📋 Existing Access Grants
+                  <span className="text-xs font-normal text-gray-400">({grants.length} total)</span>
+                </h3>
                 <ul className="space-y-2">
-                  {grants.map((g, i) => (
-                    <li
-                      key={i}
-                      className="flex justify-between items-center p-3 bg-gray-50 border rounded text-sm"
-                    >
-                      <span>
-                        <span className="font-mono text-xs text-gray-500">
-                          {g.grantee.slice(0, 8)}…{g.grantee.slice(-6)}
-                        </span>
-                        <span className="ml-3 text-gray-400">
-                          Expires: {new Date(g.expiry * 1000).toLocaleString()}
-                        </span>
-                      </span>
-                      <span className="flex items-center gap-2">
-                        <span
-                          className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                            g.active && g.expiry > Date.now() / 1000
-                              ? "bg-green-100 text-green-700"
-                              : "bg-gray-100 text-gray-500"
-                          }`}
-                        >
-                          {g.active && g.expiry > Date.now() / 1000 ? "Active" : "Expired/Revoked"}
-                        </span>
-                        {g.active && (
-                          <button
-                            onClick={() => handleRevoke(g.grantee)}
-                            className="text-xs px-2 py-1 bg-red-500 text-white rounded hover:bg-red-700"
+                  {grants.map((g, i) => {
+                    const now = Date.now() / 1000;
+                    const isActive = g.active && g.expiry > now;
+                    const expiringSoon = isActive && (g.expiry - now) < 3600; // within 1hr
+                    const statusBadge = !g.active
+                      ? { label: "Revoked", cls: "bg-gray-100 text-gray-500" }
+                      : g.expiry <= now
+                      ? { label: "Expired", cls: "bg-red-100 text-red-500" }
+                      : expiringSoon
+                      ? { label: "⚠ Expiring Soon", cls: "bg-amber-100 text-amber-700" }
+                      : { label: "✓ Active", cls: "bg-green-100 text-green-700" };
+
+                    return (
+                      <li
+                        key={i}
+                        className={`flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 p-3 rounded-lg border text-sm ${
+                          isActive ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"
+                        }`}
+                      >
+                        <div>
+                          <p
+                            className="font-mono text-xs text-gray-600 cursor-help"
+                            title={g.grantee}
                           >
-                            Revoke
-                          </button>
-                        )}
-                      </span>
-                    </li>
-                  ))}
+                            {g.grantee.slice(0, 10)}…{g.grantee.slice(-8)}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            Expires: {new Date(g.expiry * 1000).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusBadge.cls}`}>
+                            {statusBadge.label}
+                          </span>
+                          {g.active && (
+                            <button
+                              onClick={() => handleRevoke(g.grantee)}
+                              className="text-xs px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
+                            >
+                              Revoke
+                            </button>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             )}

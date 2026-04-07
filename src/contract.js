@@ -1,4 +1,4 @@
-export const CONTRACT_ADDRESS = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
+export const CONTRACT_ADDRESS = "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9";
 
 export const CONTRACT_ABI = [
 	{
@@ -608,6 +608,59 @@ export const CONTRACT_ABI = [
 				"internalType": "address",
 				"name": "",
 				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "certHash",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "address",
+				"name": "verifier",
+				"type": "address"
+			}
+		],
+		"name": "checkGrantAccess",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "certHash",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "address",
+				"name": "grantee",
+				"type": "address"
+			}
+		],
+		"name": "getGrantExpiry",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "expiry",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "active",
+				"type": "bool"
 			}
 		],
 		"stateMutability": "view",

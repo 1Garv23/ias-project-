@@ -211,9 +211,41 @@ contract CertificateRegistry {
         if (roles[caller] == Role.GOVT) return true;
         if (roles[caller] == Role.INSTITUTION) return true;
         if (caller == certificates[certHash].studentWallet) return true;
+        // The institution that originally issued this certificate can always verify it
+        if (caller == certificates[certHash].issuerWallet) return true;
+        // For all other callers (employers / verifiers) check for an active, non-expired grant
         AccessGrant[] storage grants = accessGrants[certHash];
         for (uint256 i = 0; i < grants.length; i++) {
-            if (grants[i].grantee == caller && grants[i].active && grants[i].expiry > block.timestamp) {
+            if (
+                grants[i].grantee == caller &&
+                grants[i].active &&
+                grants[i].expiry > block.timestamp   // ← key expiry enforcement
+            ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @notice Check whether a specific verifier address currently has a valid
+     *         (active AND not expired) grant for a certificate.
+     * @dev    Does NOT check role-based access — use this to test whether a
+     *         time-limited employer grant is still live before calling
+     *         verifyCertificate from the frontend.
+     */
+    function checkGrantAccess(bytes32 certHash, address verifier)
+        public
+        view
+        returns (bool)
+    {
+        AccessGrant[] storage grants = accessGrants[certHash];
+        for (uint256 i = 0; i < grants.length; i++) {
+            if (
+                grants[i].grantee == verifier &&
+                grants[i].active &&
+                grants[i].expiry > block.timestamp
+            ) {
                 return true;
             }
         }
@@ -223,5 +255,28 @@ contract CertificateRegistry {
     function getAccessGrants(bytes32 certHash) public view returns (AccessGrant[] memory) {
         require(msg.sender == certificates[certHash].studentWallet, "Only the student can view grants");
         return accessGrants[certHash];
+    }
+
+    /**
+     * @notice Returns the raw expiry timestamp and active flag for a given
+     *         grantee on a certificate.  Callable by ANYONE (including the
+     *         grantee themselves) so the frontend can compare against real-
+     *         world time (Date.now) instead of block.timestamp.
+     * @return expiry  Unix timestamp the grant expires (0 if no grant found).
+     * @return active  Whether the most-recent grant for this grantee is active.
+     */
+    function getGrantExpiry(bytes32 certHash, address grantee)
+        public
+        view
+        returns (uint256 expiry, bool active)
+    {
+        AccessGrant[] storage grants = accessGrants[certHash];
+        // Iterate in reverse so we get the MOST RECENT grant for this grantee
+        for (uint256 i = grants.length; i > 0; i--) {
+            if (grants[i - 1].grantee == grantee) {
+                return (grants[i - 1].expiry, grants[i - 1].active);
+            }
+        }
+        return (0, false);
     }
 }

@@ -15,7 +15,7 @@ const Navbar = ({ account }) => {
     <nav className="bg-white shadow sticky top-0 z-50">
       <div className="container mx-auto px-6 py-4 flex justify-between items-center">
         <Link to="/" className="text-2xl font-bold text-green-700 flex items-center gap-2">
-         Decentralized<span className="italic">Certificate Verification</span>
+         Decentralized Certificate Verification
         </Link>
 
         <div className="flex items-center gap-4">
